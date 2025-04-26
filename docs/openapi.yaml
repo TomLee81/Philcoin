@@ -1,0 +1,50 @@
+openapi: 3.0.0
+info:
+  title: PhilCoin API
+  version: v1
+paths:
+  /healthz:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: OK
+  /v1/kyc/upload:
+    post:
+      summary: Upload ID image for KYC
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                id_image:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: KYC record
+  /v1/escrow:
+    post:
+      summary: Create escrow
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EscrowRequest'
+      responses:
+        '201':
+          description: Escrow created
+components:
+  schemas:
+    EscrowRequest:
+      type: object
+      properties:
+        buyer:
+          type: string
+        seller:
+          type: string
+        amount:
+          type: number
+        token:
+          type: string
