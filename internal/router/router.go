@@ -1,56 +1,24 @@
 package router
 
 import (
-	"encoding/json"
+	"fmt"
 	"net/http"
-	"time"
-
-	"philcoin/internal/handlers"
-	"philcoin/internal/middleware"
 
 	"github.com/gorilla/mux"
 )
 
-// NewServer returns an *http.Server with all routes and middleware applied
-func NewServer(cfg Config, db *mongo.Client) *http.Server {
+func NewRouter() *mux.Router {
 	r := mux.NewRouter()
 
-	// API versioning
-	api := r.PathPrefix("/v1").Subrouter()
+	// Define routes
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "Hello, World!")
+	}).Methods("GET")
 
-	// Apply common middleware
-	api.Use(middleware.Logging)
-	api.Use(middleware.CORS)
-	api.Use(middleware.RateLimit)
+	r.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "OK")
+	}).Methods("GET")
 
-	// Register routes
-	registerHealthRoutes(api)
-	registerMetricsRoutes(api)
-
-	// Default handler for undefined routes
-	r.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Endpoint not found"})
-	})
-
-	// Server configuration
-	return &http.Server{
-		Addr:         cfg.ServerAddr,
-		Handler:      r,
-		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 15 * time.Second,
-		IdleTimeout:  60 * time.Second,
-	}
-}
-
-// registerHealthRoutes registers health check routes
-func registerHealthRoutes(api *mux.Router) {
-	api.HandleFunc("/healthz", handlers.Healthz).Methods("GET")
-	api.HandleFunc("/readyz", handlers.Readyz).Methods("GET")
-}
-
-// registerMetricsRoutes registers metrics routes
-func registerMetricsRoutes(api *mux.Router) {
-	api.HandleFunc("/metrics", handlers.Metrics).Methods("GET")
+	return r
 }
